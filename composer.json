@@ -1,5 +1,5 @@
 {
-    "name": "ekino/drupal-bundle",
+    "name": "20steps/drupal-bundle",
     "type": "symfony-bundle",
     "description": "Integrate Symfony2 with Drupal ",
     "keywords": ["components", "drupal"],
