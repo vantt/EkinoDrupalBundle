@@ -1,68 +1,20 @@
 Drupal 7 Bundle by Ekino
 ========================
 
-[![Build Status](https://secure.travis-ci.org/ekino/EkinoDrupalBundle.png?branch=master)](http://travis-ci.org/ekino/EkinoDrupalBundle)
-
-**Requires** at least *Drush 5.0* for compatibility with Symfony console.
-
-The bundle tries to deeply integrate Symfony2 with Drupal and Drupal with Symfony2. Of course this is done without
+The bundle tries to deeply integrate Symfony3 with Drupal7 and Drupal7 with Symfony3. Of course this is done without
 altering the Drupal's core.
 
-When this bundle is activated, the Symfony2 console will have the Drupal libraries autoloaded. So, it makes possible
-the use of Drupal libraries from your Symfony2 command.
+When this bundle is activated, the Symfony3 console will have the Drupal libraries autoloaded. So, it makes possible
+the use of Drupal libraries from your Symfony3 command.
 
 Install
 -------
 
-### Download the symfony2 sandbox and the Drupal code
-
-### Install the files to have the following structure
-
-    Symfony Sandbox Root
-      - app
-      - vendor
-      - src
-      - web (Drupal source code)
-
-The ``web`` directory must be the document root and contains the Drupal source code.
-
-### Update the ``index.php`` file
-
-This file "share" the container with Drupal so it is possible to reuse Symfony2's services from within Drupal. The
-initialization process is always handled by Symfony2.
-
-``` php
-<?php
-require_once __DIR__.'/../app/bootstrap.php.cache';
-require_once __DIR__.'/../app/AppKernel.php';
-//require_once __DIR__.'/../app/bootstrap_cache.php.cache';
-//require_once __DIR__.'/../app/AppCache.php';
-
-use Symfony\Component\HttpFoundation\Request;
-
-$kernel = new AppKernel('dev', true); //
-$kernel->loadClassCache();
-$kernel->boot();
-
-// make the Symfony container available from Drupal file
-global $container;
-
-$container = $kernel->getContainer();
-
-$request = Request::createFromGlobals();
-
-$response = $kernel->handle($request);
-$response->send();
-
-$kernel->terminate($request, $response);
-```
-### Install the related Drupal module
-
-The module can be downloaded from the following url: https://github.com/ekino/ekino_drupal_symfony2
+### Download the Bricks by 20steps Drupal 7 edition
 
 ### Configuration
 
-Edit the Symfony ``config.yml`` file and add the following lines:
+Edit the  ``etc/config/cms.yml`` file:
 
     parameters:
         session.flashbag.class:       Ekino\Bundle\DrupalBundle\Port\DrupalFlashBag
