@@ -149,7 +149,8 @@ class Drupal implements DrupalInterface
      */
     public function initializeDrush()
     {
-        define('DRUSH_BASE_PATH', sprintf('%s/../drush', $this->root));
+        //define('DRUSH_BASE_PATH', sprintf('%s/../drush', $this->root));
+	    define('DRUSH_BASE_PATH', sprintf('%s/../vendor/20steps/drush', $this->root));
 	
 	    define('DRUSH_REQUEST_TIME', microtime(TRUE));
 
