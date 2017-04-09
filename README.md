@@ -1,11 +1,11 @@
-Drupal 7 Bundle by Ekino
-========================
+Bridge Bricks by 20steps inc. Symfony 3 to Drupal 7.x
+=====================================================
 
-The bundle tries to deeply integrate Symfony3 with Drupal7 and Drupal7 with Symfony3. Of course this is done without
-altering the Drupal's core.
+The bundle deeply integrates Bricks by 20steps including Symfony 3 with Drupal7 and vice versa. This is done without
+altering Drupal's core.
 
-When this bundle is activated, the Symfony3 console will have the Drupal libraries autoloaded. So, it makes possible
-the use of Drupal libraries from your Symfony3 command.
+When this bundle is activated, the Symfony 3 console will have the Drupal 7.x libraries autoloaded. So, it makes possible
+the use of Drupal libraries from your Symfony 3 command.
 
 Install
 -------
@@ -14,7 +14,7 @@ Install
 
 ### Configuration
 
-Edit the  ``etc/config/cms.yml`` file:
+Adapt the  ``etc/config/cms.yml`` file to your needs:
 
     parameters:
         session.flashbag.class:       Ekino\Bundle\DrupalBundle\Port\DrupalFlashBag
@@ -80,7 +80,7 @@ The bundle comes with 3 delivery strategies:
 * ekino.drupal.delivery_strategy.symfony: Drupal returns the response only if the page is not 404
 
 The (optional) section ``entity_repositories`` allows you to easy interact with
-Drupal API to retrieve contents and handle it from Symfony code.
+Drupal 7.x API to retrieve contents and handle it from Symfony code.
 The configuration offers default values:
 
 * default entity type is ``node``
@@ -96,7 +96,7 @@ UPDATE users SET `emailCanonical` = `mail`, `usernameCanonical` = `name`, `roles
 Usage
 -----
 
-Symfony components can be used from within Drupal:
+Symfony services can be used from within Drupal:
 
 ``` php
 <?php
@@ -137,8 +137,6 @@ Limitations
 
 * It is not possible to use Symfony native class to manage session as Drupal initializes its own session handler
 and there is no way to change this.
-* requests must be served through the index.php as it is the default value in the .htaccess file and there is no
-way to change the default script in Drupal
 
 Preview
 -------
