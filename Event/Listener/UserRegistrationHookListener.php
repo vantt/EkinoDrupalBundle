@@ -44,10 +44,11 @@ class UserRegistrationHookListener
      * @param Request         $request
      * @param array           $providerKeys
      */
-    public function __construct(LoggerInterface $logger, Request $request, array $providerKeys)
+    public function __construct(LoggerInterface $logger, $providerKeys)
     {
         $this->logger       = $logger;
-        $this->request      = $request;
+        // FIXME
+        // $this->request      = $request;
         $this->providerKeys = $providerKeys;
     }
 

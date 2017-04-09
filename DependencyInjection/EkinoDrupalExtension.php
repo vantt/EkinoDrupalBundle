@@ -51,8 +51,9 @@ class EkinoDrupalExtension extends Extension
         $container->getDefinition('ekino.drupal.request_listener')
             ->replaceArgument(1, new Reference($config['strategy_id']));
 
-        $container->getDefinition('ekino.drupal.user_registration_hook')
-            ->replaceArgument(2, $config['provider_keys']);
+        // FIXME
+        //$container->getDefinition('ekino.drupal.user_registration_hook')
+        //    ->replaceArgument(2, $config['provider_keys']);
 
         $container->setAlias('logger', $config['logger']);
 
@@ -71,7 +72,8 @@ class EkinoDrupalExtension extends Extension
         $registry = $container->getDefinition('ekino.drupal.entity_registry');
 
         foreach ($config['entity_repositories'] as $repository) {
-            $registry->addMethodCall('addRepositoryMetadata', array($repository['class'], $repository['type'], $repository['bundle']));
+        	// FIXME
+            // $registry->addMethodCall('addRepositoryMetadata', array($repository['class'], $repository['type'], $repository['bundle']));
         }
     }
 

@@ -14,7 +14,7 @@ namespace Ekino\Bundle\DrupalBundle\Event\Listener;
 use Ekino\Bundle\DrupalBundle\Event\DrupalEntityEvent;
 use Ekino\Bundle\DrupalBundle\Event\DrupalEntitiesEvent;
 use FOS\UserBundle\Model\UserManagerInterface;
-use Symfony\Component\HttpKernel\Log\LoggerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * These methods are called by the drupal user hook

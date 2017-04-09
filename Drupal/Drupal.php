@@ -150,8 +150,8 @@ class Drupal implements DrupalInterface
     public function initializeDrush()
     {
         define('DRUSH_BASE_PATH', sprintf('%s/../drush', $this->root));
-
-        define('DRUSH_REQUEST_TIME', microtime(TRUE));
+	
+	    define('DRUSH_REQUEST_TIME', microtime(TRUE));
 
         require_once DRUSH_BASE_PATH . '/includes/bootstrap.inc';
         require_once DRUSH_BASE_PATH . '/includes/environment.inc';
@@ -214,7 +214,8 @@ class Drupal implements DrupalInterface
             return;
         }
 
-        $user = $this->userManager->createUser()->fromDrupalUser($user);
+        // FIXME
+        //$user = $this->userManager->createUser()->fromDrupalUser($user);
     }
 
     /**
