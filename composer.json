@@ -9,6 +9,10 @@
         {
             "name": "Thomas Rabaix",
             "email": "thomas.rabaix@ekino.com"
+        },
+        {
+            "name": "Helmut Hoffer von Ankershoffen",
+            "email": "hhva@ekino.com"
         }
     ],
     "require": {
