@@ -167,6 +167,7 @@ class Drupal implements DrupalInterface
         require_once DRUSH_BASE_PATH . '/includes/cache.inc';
         require_once DRUSH_BASE_PATH . '/includes/filesystem.inc';
         require_once DRUSH_BASE_PATH . '/includes/dbtng.inc';
+	    require_once DRUSH_BASE_PATH . '/includes/engines.inc';
 
         $drush_info = drush_read_drush_info();
         define('DRUSH_VERSION', $drush_info['drush_version']);
