@@ -149,7 +149,6 @@ class Drupal implements DrupalInterface
      */
     public function initializeDrush()
     {
-        //define('DRUSH_BASE_PATH', sprintf('%s/../drush', $this->root));
 	    define('DRUSH_BASE_PATH', sprintf('%s/../vendor/20steps/drush', $this->root));
 	
 	    define('DRUSH_REQUEST_TIME', microtime(TRUE));
@@ -183,7 +182,11 @@ class Drupal implements DrupalInterface
         drush_set_context('argv', $GLOBALS['argv']);
 
         drush_set_option('root', $this->root);
-
+        if (defined('DRUSH_URI')) {
+        	drush_set_option('uri',DRUSH_URI);
+        }
+        
+        
         // make sure the default path point to the correct instance
         $currentDirectory = getcwd();
         chdir($this->root);

@@ -64,7 +64,8 @@ class UserEntityHookListener
     {
         $user = $this->userManager->createUser();
 
-        $user->fromDrupalUser($drupalUser);
+        // FIXME
+        // $user->fromDrupalUser($drupalUser);
 
         return $user;
     }
