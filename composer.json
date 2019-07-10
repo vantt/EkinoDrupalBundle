@@ -1,7 +1,7 @@
 {
-    "name": "20steps/drupal-bundle",
+    "name": "anphabe/drupal-bundle",
     "type": "symfony-bundle",
-    "description": "Integrate Symfony2 with Drupal ",
+    "description": "Integrate Symfony4 with Drupal ",
     "keywords": ["components", "drupal"],
     "homepage": "https://github.com/ekino/EkinoDrupalBundle",
     "license": "MIT",
@@ -26,6 +26,5 @@
     },
     "autoload": {
         "psr-0": { "Ekino\\Bundle\\DrupalBundle": "" }
-    },
-    "target-dir": "Ekino/Bundle/DrupalBundle"
+    }    
 }
