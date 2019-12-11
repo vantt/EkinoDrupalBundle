@@ -1,0 +1,2 @@
+drupal:
+  resource: '@EkinoDrupalBundle/Resources/config/routing.yaml'

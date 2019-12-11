@@ -1,0 +1,40 @@
+security:
+
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    providers:
+        drupal:
+            # this is an Entity so we dont need a UserProvider, entity manager will handle this
+            entity:
+                class: Ekino\Bundle\DrupalBundle\Entity\DrupalUser
+                property: name
+
+    encoders:
+        Ekino\Bundle\DrupalBundle\Entity\DrupalUser:
+            id: Ekino\Bundle\DrupalBundle\Security\DrupalEncoder
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        drupal:
+            pattern:    ^/
+            stateless: false
+            anonymous: true
+            switch_user: true
+            provider: drupal
+            guard:
+              authenticators:
+                - Ekino\Bundle\DrupalBundle\Security\DrupalAuthenticator
+            logout:
+                path:   /user/logout
+                target: /
+                invalidate_session: true
+                delete_cookies:     ~
+            remember_me:
+              always_remember_me: true
+              secret:   '%kernel.secret%'
+              lifetime: 604800 # 1 week in seconds
+              path:  /
+              domain: '.%site.domain%'
+              token_provider: 'Symfony\Bridge\Doctrine\Security\RememberMe\DoctrineTokenProvider'

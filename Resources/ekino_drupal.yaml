@@ -1,0 +1,50 @@
+services:
+  Symfony\Bridge\Doctrine\Security\RememberMe\DoctrineTokenProvider:
+      autoconfigure: true
+      autowire: true
+
+  Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler:
+    arguments:
+      - !service { class: PDO, factory: ['@database_connection', 'getWrappedConnection'] }
+      - { db_table: 'sessions_sym' }
+
+framework:
+    # Enables session support. Note that the session will ONLY be started if you read or write from it.
+    # Remove or comment this section to explicitly disable session support.
+    # Here we use SESSION BRIDGE to integrate with old Drupal Session
+    session:
+       enabled: true
+       name: 'AFBSESSID'
+       cookie_secure: false
+       cookie_domain: '.%site.domain%'
+       cookie_lifetime: 0
+       cookie_httponly: false
+       gc_probability: 1
+       gc_divisor: 100
+       gc_maxlifetime: 2000000
+       handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler
+
+doctrine:
+    orm:
+        mappings:
+            EkinoDrupalBundle:
+                is_bundle:            true
+                mapping:              true
+                type:                 annotation
+                dir:                  "Entity"
+                prefix:               Ekino\Bundle\DrupalBundle\Entity
+                alias:                ~
+
+ekino_drupal:
+    root:          "%kernel.drupal_dir%"
+    logger:        ekino.drupal.logger.watchdog
+    strategy_id:   ekino.drupal.delivery_strategy.symfony
+
+    # attach a security token to the following provider keys
+    provider_keys: [drupal, admin]
+
+    # switch to true if you want to prefix the name of Symfony tables
+    table_prefix:
+        enabled: false
+        prefix:  symfony__
+        exclude: [users]
