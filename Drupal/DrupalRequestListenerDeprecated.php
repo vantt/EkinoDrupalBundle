@@ -15,6 +15,7 @@ use Ekino\Bundle\DrupalBundle\Delivery\DeliveryStrategyInterface;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
@@ -23,50 +24,40 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
  * See http://symfony.com/doc/current/book/internals.html#handling-requests
  *
  * @author Thomas Rabaix <thomas.rabaix@ekino.com>
+ * @deprecated  originally, author use listener to handle Drupal before return controlling to Symfony
+ *              my approach is using DrupalController as a normal controller to handle all Drupal request.
+ *
  */
-class DrupalRequestListener
-{
-    /**
-     * @var DrupalInterface
-     */
-    protected $drupal;
+class DrupalRequestListenerDeprecated {
+
+    protected $render;
 
     /**
-     * @var DeliveryStrategyInterface
-     */
-    protected $strategy;
-
-    /**
-     * Constructor
+     * DrupalRequestListener constructor.
      *
-     * @param DrupalInterface           $drupal   A Drupal instance
-     * @param DeliveryStrategyInterface $strategy A delivery strategy instance
+     * @param DrupalRender $render
      */
-    public function __construct(DrupalInterface $drupal, DeliveryStrategyInterface $strategy)
-    {
-        $this->drupal   = $drupal;
-        $this->strategy = $strategy;
+    public function __construct(DrupalRender $render) {
+        $this->render = $render;
     }
 
     /**
-     * @param GetResponseEvent $event
+     * @param RequestEvent $event
      *
      * @return mixed
      */
-    public function onKernelRequest(GetResponseEvent $event)
-    {
+    public function onKernelRequest(RequestEvent $event) {
+        return;
+
         if (HttpKernelInterface::MASTER_REQUEST !== $event->getRequestType()) {
             return false;
         }
 
-        $this->drupal->defineState($event->getRequest());
-
-        $this->strategy->buildResponse($this->drupal);
-
-        $response = $this->drupal->getResponse();
-
-        if ($this->drupal->hasResponse()) {
-            $event->setResponse($response);
-        }
+        $this->render->boot($event->getRequest());
+//        return;
+//
+//        if ($response = $this->render->buildResponse($event->getRequest())) {
+//            $event->setResponse($response);
+//        }
     }
 }

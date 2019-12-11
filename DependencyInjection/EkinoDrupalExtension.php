@@ -14,11 +14,8 @@ namespace Ekino\Bundle\DrupalBundle\DependencyInjection;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Config\Resource\FileResource;
-use Symfony\Component\Finder\Finder;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
@@ -48,7 +45,7 @@ class EkinoDrupalExtension extends Extension
         $container->getDefinition('ekino.drupal')
             ->replaceArgument(0, $config['root']);
 
-        $container->getDefinition('ekino.drupal.request_listener')
+        $container->getDefinition('ekino.drupal.render')
             ->replaceArgument(1, new Reference($config['strategy_id']));
 
         // FIXME

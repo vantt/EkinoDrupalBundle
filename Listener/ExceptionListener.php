@@ -2,8 +2,8 @@
 
 namespace Ekino\Bundle\DrupalBundle\Listener;
 
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 use Ekino\Bundle\DrupalBundle\Drupal\DrupalInterface;
@@ -32,9 +32,9 @@ class ExceptionListener
     }
 
     /**
-     * @param GetResponseForExceptionEvent $event
+     * @param ExceptionEvent $event
      */
-    public function onKernelException(GetResponseForExceptionEvent $event)
+    public function onKernelException(ExceptionEvent $event)
     {
         $is404 = false;
 

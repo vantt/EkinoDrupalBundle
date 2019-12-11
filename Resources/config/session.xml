@@ -15,5 +15,11 @@
             <argument type="service" id="ekino.drupal" />
             <argument />
         </service>
+
+        <!--service id="Ekino\Bundle\DrupalBundle\Port\Session" class="Ekino\Bundle\DrupalBundle\Port\Session" decorates="session"></service>
+        <service id="Ekino\Bundle\DrupalBundle\Port\SessionStorage" class="Ekino\Bundle\DrupalBundle\Port\SessionStorage" decorates="session.storage.native"></service-->
+
     </services>
+
+
 </container>

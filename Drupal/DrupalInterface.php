@@ -23,6 +23,8 @@ interface DrupalInterface
      */
     public function initialize();
 
+    public function isInitialized();
+
     /**
      * The shutdown method only catches exit instruction from the Drupal code to rebuild the correct response
      *
@@ -57,6 +59,8 @@ interface DrupalInterface
      * @throws InvalidStateMethodCallException
      */
     public function is404();
+
+    public function isRedirect() : bool ;
 
     /**
      * @return boolean

@@ -7,20 +7,25 @@
     <parameters>
         <parameter key="ekino.drupal.drupal.class">Ekino\Bundle\DrupalBundle\Drupal\Drupal</parameter>
         <parameter key="ekino.drupal.exception_listener.class">Ekino\Bundle\DrupalBundle\Listener\ExceptionListener</parameter>
-        <parameter key="ekino.drupal.access.simple_role_voter.class">Ekino\Bundle\DrupalBundle\Security\Voter\RoleVoter</parameter>
+        <parameter key="ekino.drupal.access.simple_role_voter.class">Ekino\Bundle\DrupalBundle\Security\DrupalRoleVoter</parameter>
     </parameters>
 
     <services>
-        <service id="ekino.drupal" class="%ekino.drupal.drupal.class%">
+        <service id="ekino.drupal" class="%ekino.drupal.drupal.class%" public="true">
             <argument />
-            <argument type="service" id="fos_user.user_manager" />
+            <argument type="service" id="fos_user.user_manager" on-invalid="null" />
         </service>
 
-        <service id="ekino.drupal.request_listener" class="Ekino\Bundle\DrupalBundle\Drupal\DrupalRequestListener">
-            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="32"/>
-
+        <service id="ekino.drupal.render" class="Ekino\Bundle\DrupalBundle\Drupal\DrupalRender" autowire="true" autoconfigure="true" >
             <argument type="service" id="ekino.drupal" />
             <argument />
+        </service>
+
+        <service id="Ekino\Bundle\DrupalBundle\Drupal\DrupalRender" alias="ekino.drupal.render" />
+
+        <service id="ekino.drupal.request_listener" class="Ekino\Bundle\DrupalBundle\Drupal\DrupalRequestListenerDeprecated" autowire="true">
+            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" priority="32"/>
+
         </service>
 
         <service id="ekino.drupal.delivery_strategy.background" class="Ekino\Bundle\DrupalBundle\Delivery\BackgroundDeliveryStrategy" />
@@ -29,9 +34,9 @@
 
         <service id="ekino.drupal.delivery_strategy.symfony" class="Ekino\Bundle\DrupalBundle\Delivery\FullSymfonyDeliveryStrategy" />
 
-        <service id="ekino.drupal.subscriber.user.orm" class="Ekino\Bundle\DrupalBundle\Event\Subscriber\UserSubscriber">
+        <!-- service id="ekino.drupal.subscriber.user.orm" class="Ekino\Bundle\DrupalBundle\Event\Subscriber\UserSubscriber">
             <tag name="doctrine.event_subscriber" />
-        </service>
+        </service-->
 
         <service id="ekino.drupal.subscriber.table_prefix" class="Ekino\Bundle\DrupalBundle\Event\Subscriber\TablePrefixSubscriber">
             <tag name="doctrine.event_subscriber" />
@@ -51,10 +56,16 @@
             <tag name="security.voter" priority="240" />
         </service>
 
-        <service id="ekino.drupal.logger.watchdog" class="Ekino\Bundle\DrupalBundle\Log\LoggerWatchdog"/>
+        <service id="ekino.drupal.logger.watchdog" class="Ekino\Bundle\DrupalBundle\Log\LoggerWatchdog" autoconfigure="true" autowire="true" />
 
         <service id="ekino.drupal.entity_registry" class="Ekino\Bundle\DrupalBundle\Entity\EntityRegistry">
             <argument type="service" id="ekino.drupal" />
         </service>
+
+        <service id="Ekino\Bundle\DrupalBundle\Drupal\DrupalController" class="Ekino\Bundle\DrupalBundle\Drupal\DrupalController" public="true" autowire="true" />
+        <service id="Ekino\Bundle\DrupalBundle\Security\DrupalEncoder" class="Ekino\Bundle\DrupalBundle\Security\DrupalEncoder" public="true" autowire="true" />
+        <service id="Ekino\Bundle\DrupalBundle\Security\DrupalAuthenticator" class="Ekino\Bundle\DrupalBundle\Security\DrupalAuthenticator" public="true" autowire="true" />
+        <service id="Ekino\Bundle\DrupalBundle\Security\StackUser" class="Ekino\Bundle\DrupalBundle\Security\StackUser" public="true" autowire="true" />
+
     </services>
 </container>

@@ -31,7 +31,7 @@ class UserEntityHookListener
      * @param \FOS\UserBundle\Model\UserManagerInterface $userManager
      * @param \Symfony\Component\HttpKernel\Log\LoggerInterface $logger
      */
-    public function __construct(UserManagerInterface $userManager, LoggerInterface $logger)
+    public function __construct(UserManagerInterface $userManager = null, LoggerInterface $logger)
     {
         $this->userManager = $userManager;
         $this->logger      = $logger;

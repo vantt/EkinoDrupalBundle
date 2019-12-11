@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
  */
 class DrupalAttributeBag implements AttributeBagInterface, \IteratorAggregate, \Countable
 {
+    private $name = 'attributes';
+
     /**
      * @var string
      */
@@ -38,7 +40,7 @@ class DrupalAttributeBag implements AttributeBagInterface, \IteratorAggregate, \
      */
     public function getName()
     {
-        return 'attributes';
+        return $this->name;
     }
 
     /**

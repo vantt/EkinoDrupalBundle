@@ -13,6 +13,10 @@ namespace Ekino\Bundle\DrupalBundle\Drupal;
 
 use FOS\UserBundle\Model\UserManagerInterface;
 
+use Mio\D7ServiceContainer\DrupalInjectionCallback;
+use Psr\Log\LoggerInterface;
+use stdClass;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,8 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @author Thomas Rabaix <thomas.rabaix@ekino.com>
  */
-class Drupal implements DrupalInterface
-{
+class Drupal implements DrupalInterface {
     const STATE_FRESH          = 0; // the Drupal instance is not initialized
     const STATE_INIT           = 1; // the Drupal instance has been initialized
     const STATE_STATUS_DEFINED = 2; // the response status is known
@@ -82,14 +85,18 @@ class Drupal implements DrupalInterface
      */
     protected $userManager;
 
+    protected $injection;
+
+    protected $redirect = '';
+
     /**
      * Constructor
      *
-     * @param string               $root        The path of Drupal core
-     * @param UserManagerInterface $userManager A user manager instance
+     * @param string                       $root        The path of Drupal core
+     * @param DrupalInjectionCallback|null $injection
+     * @param UserManagerInterface         $userManager A user manager instance
      */
-    public function __construct($root, UserManagerInterface $userManager)
-    {
+    public function __construct($root, UserManagerInterface $userManager = null) {
         $this->root            = $root;
         $this->state           = self::STATE_FRESH;
         $this->response        = new Response();
@@ -101,16 +108,15 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function initialize()
-    {
+    public function initialize() {
         if ($this->initialized) {
             return;
         }
 
         $this->initialized = true;
-        $currentLevel = ob_get_level();
+        $currentLevel      = ob_get_level();
 
-        register_shutdown_function(array($this, 'shutdown'), $currentLevel);
+        register_shutdown_function([$this, 'shutdown'], $currentLevel);
 
         $this->encapsulate(function($path) {
             // start the Drupal bootstrap
@@ -126,7 +132,8 @@ class Drupal implements DrupalInterface
             restore_error_handler();
             restore_exception_handler();
 
-        }, $this->root);
+        }, $this->root
+        );
 
         $this->restoreBufferLevel($currentLevel);
 
@@ -139,19 +146,18 @@ class Drupal implements DrupalInterface
      *
      * @return boolean
      */
-    public function isInitialized()
-    {
+    public function isInitialized() {
         return $this->initialized;
     }
 
     /**
      * Initializes Drush which boostraps Drupal core
      */
-    public function initializeDrush()
-    {
-	    define('DRUSH_BASE_PATH', sprintf('%s/../vendor/20steps/drush', $this->root));
-	
-	    define('DRUSH_REQUEST_TIME', microtime(TRUE));
+    public function initializeDrush() {
+        return; // we don't use Drush
+        define('DRUSH_BASE_PATH', sprintf('%s/../vendor/20steps/drush', $this->root));
+
+        define('DRUSH_REQUEST_TIME', microtime(true));
 
         require_once DRUSH_BASE_PATH . '/includes/bootstrap.inc';
         require_once DRUSH_BASE_PATH . '/includes/environment.inc';
@@ -167,7 +173,7 @@ class Drupal implements DrupalInterface
         require_once DRUSH_BASE_PATH . '/includes/cache.inc';
         require_once DRUSH_BASE_PATH . '/includes/filesystem.inc';
         require_once DRUSH_BASE_PATH . '/includes/dbtng.inc';
-	    require_once DRUSH_BASE_PATH . '/includes/engines.inc';
+        require_once DRUSH_BASE_PATH . '/includes/engines.inc';
 
         $drush_info = drush_read_drush_info();
         define('DRUSH_VERSION', $drush_info['drush_version']);
@@ -178,28 +184,28 @@ class Drupal implements DrupalInterface
 
         $GLOBALS['argv'][0] = 'default';
 
-        drush_set_context('arguments', array('default', 'help'));
+        drush_set_context('arguments', ['default', 'help']);
         drush_set_context('argc', $GLOBALS['argc']);
         drush_set_context('argv', $GLOBALS['argv']);
 
         drush_set_option('root', $this->root);
         if (defined('DRUSH_URI')) {
-        	drush_set_option('uri',DRUSH_URI);
+            drush_set_option('uri', DRUSH_URI);
         }
-        
-        
+
+
         // make sure the default path point to the correct instance
         $currentDirectory = getcwd();
         chdir($this->root);
 
-        $phases = _drush_bootstrap_phases(FALSE, TRUE);
+        $phases = _drush_bootstrap_phases(false, true);
         drush_set_context('DRUSH_BOOTSTRAP_PHASE', DRUSH_BOOTSTRAP_NONE);
 
         // We need some global options processed at this early stage. Namely --debug.
         _drush_bootstrap_global_options();
 
-        $return = '';
-        $command_found = FALSE;
+        $return        = '';
+        $command_found = false;
 
         foreach ($phases as $phase) {
             drush_bootstrap_to_phase($phase);
@@ -211,8 +217,7 @@ class Drupal implements DrupalInterface
     /**
      * Fixes the user, Drupal does not provide a hook for anonymous user
      */
-    public function fixAnonymousUser()
-    {
+    public function fixAnonymousUser() {
         global $user;
 
         if (!$user || $user->uid != 0) {
@@ -226,17 +231,12 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function shutdown($level)
-    {
+    public function shutdown($level) {
         if (!$this->encapsulated) {
             return;
         }
 
-        $headers = $this->cleanHeaders();
-
-        foreach ($headers as $name => $value) {
-            $this->response->headers->set($name, $value);
-        }
+        $this->correctHeaders();
 
         $statusCode = http_response_code();
 
@@ -256,24 +256,21 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function disableResponse()
-    {
+    public function disableResponse() {
         $this->disableResponse = true;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function hasResponse()
-    {
+    public function hasResponse() {
         return !$this->disableResponse;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function is403()
-    {
+    public function is403() {
         if ($this->state < self::STATE_STATUS_DEFINED) {
             throw new InvalidStateMethodCallException;
         }
@@ -284,8 +281,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function is404()
-    {
+    public function is404() {
         if ($this->state < self::STATE_STATUS_DEFINED) {
             throw new InvalidStateMethodCallException;
         }
@@ -296,8 +292,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function isOffline()
-    {
+    public function isOffline() {
         if ($this->state < self::STATE_STATUS_DEFINED) {
             throw new InvalidStateMethodCallException;
         }
@@ -308,8 +303,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function isOnline()
-    {
+    public function isOnline() {
         if ($this->state < self::STATE_STATUS_DEFINED) {
             throw new InvalidStateMethodCallException;
         }
@@ -320,8 +314,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function isFound()
-    {
+    public function isFound() {
         if ($this->state < self::STATE_STATUS_DEFINED) {
             throw new InvalidStateMethodCallException;
         }
@@ -332,8 +325,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function isInstalled()
-    {
+    public function isInstalled() {
         if (!$this->response->isRedirect()) {
             return true;
         }
@@ -348,8 +340,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function defineState(Request $request)
-    {
+    public function defineState(Request $request) {
         $this->initialize();
 
         // Check if site is offline.
@@ -359,7 +350,7 @@ class Drupal implements DrupalInterface
         // would not change the global variable. hook_url_inbound_alter() can be used
         // to change the path. Code later will not use the $read_only_path variable.
         $read_only_path = $_GET['q'];
-        $path = null;
+        $path           = null;
 
         drupal_alter('menu_site_status', $this->status, $read_only_path);
 
@@ -373,16 +364,16 @@ class Drupal implements DrupalInterface
         }
 
         if (!($this->routerItem = menu_get_item($path))) {
-            $this->state = self::STATE_INNER_CONTENT;
+            $this->state              = self::STATE_INNER_CONTENT;
             $this->pageResultCallback = MENU_NOT_FOUND;
-            $this->status = MENU_NOT_FOUND;
+            $this->status             = MENU_NOT_FOUND;
 
             return;
         }
 
         if (!$this->routerItem['access']) {
-            $this->state = self::STATE_INNER_CONTENT;
-            $this->status = MENU_ACCESS_DENIED;
+            $this->state              = self::STATE_INNER_CONTENT;
+            $this->status             = MENU_ACCESS_DENIED;
             $this->pageResultCallback = MENU_ACCESS_DENIED;
 
             return;
@@ -394,8 +385,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function render()
-    {
+    public function render() {
         if ($this->state < self::STATE_INNER_CONTENT) {
             throw new InvalidStateMethodCallException;
         }
@@ -407,14 +397,15 @@ class Drupal implements DrupalInterface
         // Deliver the result of the page callback to the browser, or if requested,
         // return it raw, so calling code can do more processing.
         $content = $this->encapsulate(function(DrupalInterface $drupal) {
-            $routerItem = $drupal->getRouterItem();
-            $defaultDeliveryCallback = $routerItem ? $routerItem['delivery_callback'] : NULL;
+            $routerItem              = $drupal->getRouterItem();
+            $defaultDeliveryCallback = $routerItem ? $routerItem['delivery_callback'] : null;
 
             $pageResultCallback = $drupal->getPageResultCallback();
 
             drupal_deliver_page($pageResultCallback, $defaultDeliveryCallback);
             $drupal->setPageResultCallback($pageResultCallback);
-        }, $this);
+        }, $this
+        );
 
         $this->response->setContent($content);
 
@@ -430,8 +421,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function buildContent()
-    {
+    public function buildContent() {
         if ($this->state > self::STATE_INNER_CONTENT) {
             throw new InvalidStateMethodCallException;
         }
@@ -440,7 +430,14 @@ class Drupal implements DrupalInterface
             require_once $this->root . '/' . $this->routerItem['include_file'];
         }
 
-        $this->pageResultCallback = call_user_func_array($this->routerItem['page_callback'], $this->routerItem['page_arguments']);
+        // vantt add drupal injection callback
+        if ($injection_callback = $GLOBALS['injection_callback']) {
+            $this->pageResultCallback = $injection_callback->execute($this->routerItem['page_callback'], $this->routerItem['page_arguments']);
+        }
+        else {
+            $this->pageResultCallback = call_user_func_array($this->routerItem['page_callback'], $this->routerItem['page_arguments']);
+        }
+
 
         $this->state = self::STATE_INNER_CONTENT;
     }
@@ -448,48 +445,42 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function getResponse()
-    {
+    public function getResponse() {
         return $this->response;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setPageResultCallback($pageResultCallback)
-    {
+    public function setPageResultCallback($pageResultCallback) {
         $this->pageResultCallback = $pageResultCallback;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getPageResultCallback()
-    {
+    public function getPageResultCallback() {
         return $this->pageResultCallback;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setRouterItem($routerItem)
-    {
+    public function setRouterItem($routerItem) {
         $this->routerItem = $routerItem;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getRouterItem()
-    {
+    public function getRouterItem() {
         return $this->routerItem;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getEntityInfo($entityType = null)
-    {
+    public function getEntityInfo($entityType = null) {
         $this->initialize();
 
         return entity_get_info($entityType);
@@ -498,8 +489,7 @@ class Drupal implements DrupalInterface
     /**
      * {@inheritdoc}
      */
-    public function getEntityController($entityType)
-    {
+    public function getEntityController($entityType) {
         $this->initialize();
 
         return entity_get_controller($entityType);
@@ -510,11 +500,10 @@ class Drupal implements DrupalInterface
      *
      * @return string
      */
-    protected function encapsulate()
-    {
+    protected function encapsulate() {
         $this->encapsulated = true;
-        $args = func_get_args();
-        $function = array_shift($args);
+        $args               = func_get_args();
+        $function           = array_shift($args);
 
         $content = '';
 
@@ -522,21 +511,23 @@ class Drupal implements DrupalInterface
             $content .= $buffer;
 
             return '';
-        });
+        }
+        );
+
 
         try {
             call_user_func_array($function, $args);
         } catch (\Exception $e) {
+
+            var_dump(microtime());
+            var_dump($e);
+            exit;
             // @todo: log error message
         }
 
         ob_end_flush();
 
-        $headers = $this->cleanHeaders();
-
-        foreach ($headers as $name => $value) {
-            $this->response->headers->set($name, $value);
-        }
+        $this->correctHeaders();
 
         $this->encapsulated = false;
 
@@ -546,17 +537,14 @@ class Drupal implements DrupalInterface
     /**
      * @return array
      */
-    protected function cleanHeaders()
-    {
-        $headers = array();
-
+    protected function cleanHeaders() {
+        $headers = [];
         foreach (headers_list() as $header) {
             list($name, $value) = explode(':', $header, 2);
             $headers[$name] = trim($value);
 
             header_remove($name);
         }
-
         return $headers;
     }
 
@@ -565,14 +553,41 @@ class Drupal implements DrupalInterface
      *
      * @param integer $level
      */
-    protected function restoreBufferLevel($level)
-    {
+    protected function restoreBufferLevel($level) {
         if (!is_numeric($level)) {
             return;
         }
 
         while (ob_get_level() > $level) {
             ob_end_flush();
+        }
+    }
+
+    final public function isRedirect(): bool {
+        return !empty($this->redirect);
+    }
+
+    /**
+     * @return string
+     */
+    final public function getRedirect(): string {
+        return $this->redirect;
+    }
+
+    private function correctHeaders() {
+        $headers = $this->cleanHeaders();
+
+        foreach ($headers as $name => $value) {
+            if ('Set-Cookie' === $name) {
+                $this->response->headers->setCookie(Cookie::fromString($value));
+            }
+            else {
+                $this->response->headers->set($name, $value);
+            }
+
+            if ('Location' === $name) {
+                $this->redirect = $value;
+            }
         }
     }
 }

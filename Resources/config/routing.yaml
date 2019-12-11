@@ -1,0 +1,5 @@
+drupal_fallback:
+    path: /{req}
+    controller: 'Ekino\Bundle\DrupalBundle\Drupal\DrupalController'
+    requirements:
+        req: ".*"

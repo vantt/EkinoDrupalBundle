@@ -28,7 +28,7 @@ class UserRegistrationHookListenerTest extends \PHPUnit_Framework_TestCase
     {
         $logger   = $this->getMock('Psr\Log\LoggerInterface');
         $request  = $this->getMock('Symfony\Component\HttpFoundation\Request');
-        $listener = new UserRegistrationHookListener($logger, $request, array());
+        $listener = new UserAuthenticationHookListener($logger, $request, array());
 
         $event = $this->getMock('Ekino\Bundle\DrupalBundle\Event\DrupalEvent');
         $event->expects($this->once())->method('getParameter')->with($this->equalTo(1))->willReturn(null);
@@ -53,7 +53,7 @@ class UserRegistrationHookListenerTest extends \PHPUnit_Framework_TestCase
         $event = $this->getMock('Ekino\Bundle\DrupalBundle\Event\DrupalEvent');
         $event->expects($this->once())->method('getParameter')->with($this->equalTo(1))->willReturn($user);
 
-        $listener = new UserRegistrationHookListener($logger, $request, array('1', '2', '3'));
+        $listener = new UserAuthenticationHookListener($logger, $request, array('1', '2', '3'));
         $listener->onLogin($event);
     }
 
@@ -72,7 +72,7 @@ class UserRegistrationHookListenerTest extends \PHPUnit_Framework_TestCase
         $event = $this->getMock('Ekino\Bundle\DrupalBundle\Event\DrupalEvent');
         $event->expects($this->once())->method('getParameter')->with($this->equalTo(1))->willReturn($user);
 
-        $listener = new UserRegistrationHookListener($logger, $request, array());
+        $listener = new UserAuthenticationHookListener($logger, $request, array());
         $listener->onLogin($event);
     }
 }

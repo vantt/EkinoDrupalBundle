@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Ekino\Bundle\DrupalBundle\Delivery\DeliveryStrategyInterface;
-use Ekino\Bundle\DrupalBundle\Drupal\DrupalRequestListener;
+use Ekino\Bundle\DrupalBundle\Drupal\DrupalRequestListenerDepricated;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -31,7 +31,7 @@ class DrupalRequestListenerTest extends \PHPUnit_Framework_TestCase
 
         $request    = new Request;
         $event      = new GetResponseEvent($kernel, $request, HttpKernelInterface::SUB_REQUEST);
-        $listener   = new DrupalRequestListener($drupal, $strategy);
+        $listener   = new DrupalRequestListenerDepricated($drupal, $strategy);
 
         $this->assertFalse($listener->onKernelRequest($event));
     }
@@ -49,7 +49,7 @@ class DrupalRequestListenerTest extends \PHPUnit_Framework_TestCase
 
         $request    = new Request;
         $event      = new GetResponseEvent($kernel, $request, HttpKernelInterface::MASTER_REQUEST);
-        $listener   = new DrupalRequestListener($drupal, $strategy);
+        $listener   = new DrupalRequestListenerDepricated($drupal, $strategy);
 
         $listener->onKernelRequest($event);
 
@@ -69,7 +69,7 @@ class DrupalRequestListenerTest extends \PHPUnit_Framework_TestCase
 
         $request    = new Request;
         $event      = new GetResponseEvent($kernel, $request, HttpKernelInterface::MASTER_REQUEST);
-        $listener   = new DrupalRequestListener($drupal, $strategy);
+        $listener   = new DrupalRequestListenerDepricated($drupal, $strategy);
 
         $listener->onKernelRequest($event);
 

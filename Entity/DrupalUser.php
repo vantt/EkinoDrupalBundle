@@ -1,212 +1,222 @@
 <?php
 
-/*
- * This file is part of the Ekino Drupal package.
- *
- * (c) 2011 Ekino
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace Ekino\Bundle\DrupalBundle\Entity;
 
 
-abstract class DrupalUser extends \stdClass
-{
-    const STATUS_BLOCKED = 0;
-    const STATUS_ENABLED = 1;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+use stdClass;
+use Symfony\Component\Security\Core\User\UserInterface;
 
-    public $uid;
-    public $pass;
-    public $name;
-    public $mail;
-    public $theme;
-    public $signature;
-    public $signature_format;
-    public $created;
-    public $access;
-    public $login;
-    public $status;
-    public $timezone;
-    public $language;
-    public $picture;
-    public $init;
-    public $data;
-
-    public $path;
+/**
+ * DrupalUser
+ *
+ * This entity object is loaded by Symfony-Doctrine when doing authentication
+ * and being kept (a simple version) in the Session after a successful-authentication
+ *
+ * @ORM\Entity(readOnly=true)
+ * @ORM\Table(name="users", uniqueConstraints={@ORM\UniqueConstraint(name="name", columns={"name"})}, indexes={@ORM\Index(name="mail", columns={"mail"}), @ORM\Index(name="created", columns={"created"}), @ORM\Index(name="access", columns={"access"}), @ORM\Index(name="picture", columns={"picture"})})
+ */
+class DrupalUser implements UserInterface, \Serializable {
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="uid", type="integer", nullable=false, options={"unsigned"=true,"comment"="Primary Key: Unique user ID."})
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="IDENTITY")
+     */
+    public $uid = '0';
 
     /**
-     * @param $name
-     * @return mixed
+     * @var string
+     *
+     * @ORM\Column(name="name", type="string", length=60, nullable=false)
      */
-    public function __get($name)
-    {
-        if (method_exists($this, 'get'.$name)) {
-            return call_user_func(array($this, 'get'.$name));
-        }
+    public $name = '';
 
-        return $this->$name;
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="pass", type="string", length=128, nullable=false)
+     */
+    public $pass = '';
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="mail", type="string", length=254, nullable=true)
+     */
+    public $mail = '';
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="theme", type="string", length=255, nullable=false)
+     */
+    public $theme = '';
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="signature", type="string", length=255, nullable=false)
+     */
+    public $signature = '';
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="signature_format", type="string", length=255, nullable=true)
+     */
+    public $signatureFormat;
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="created", type="integer", nullable=false, options={"comment"="Timestamp for when user was created."})
+     */
+    public $created = '0';
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="access", type="integer", nullable=false, options={"comment"="Timestamp for previous time user accessed the site."})
+     */
+    public $access = '0';
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="login", type="integer", nullable=false, options={"comment"="Timestamp for user’s last login."})
+     */
+    public $login = '0';
+
+    /**
+     * @var bool
+     *
+     * @ORM\Column(name="status", type="boolean", nullable=false, options={"comment"="Whether the user is active(1) or blocked(0)."})
+     */
+    public $status = '0';
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="timezone", type="string", length=32, nullable=true)
+     */
+    public $timezone;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="language", type="string", length=12, nullable=false)
+     */
+    public $language = '';
+
+    /**
+     * @var int
+     *
+     * @ORM\Column(name="picture", type="integer", nullable=false, options={"comment"="Foreign key: file_managed.fid of user’s picture."})
+     */
+    public $picture = '0';
+
+    /**
+     * @var string|null
+     *
+     * @ORM\Column(name="init", type="string", length=254, nullable=true)
+     */
+    public $init = '';
+
+    /**
+     * @var array
+     *
+     * @ORM\Column(name="data", type="array", length=0, nullable=true, options={"comment"="A serialized array of name value pairs that are related to the user. Any form values posted during user edit are stored and are loaded into the $user object during user_load(). Use of this field is discouraged and it will likely disappear in a future..."})
+     */
+    public $data = [];
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\DrupalRole", fetch="EAGER")
+     * @ORM\JoinTable(
+     *     name="users_roles",
+     *     joinColumns={
+     *         @ORM\JoinColumn(name="uid", referencedColumnName="uid")
+     *     },
+     *     inverseJoinColumns={
+     *         @ORM\JoinColumn(name="rid", referencedColumnName="rid")
+     *     }
+     * )
+     * @var Collection of DrupalRole
+     */
+    public $_roles = [];
+
+    public  $roles          = [];
+    public  $symfonyRoles   = [];
+    private $isRolesRebuilt = false;
+
+    public function __construct() {
+        $this->_roles = new ArrayCollection();
     }
 
-    public function setAccess($access)
-    {
-        $this->access = $access;
+    /**
+     * Symfony will call this method to get list of User's Roles
+     *
+     * We have to convert drupal-roles-list to symfony list
+     *
+     * @return array
+     */
+    final public function getRoles(): array {
+        $this->buildRoles();
+
+        return $this->symfonyRoles;
     }
 
-    public function getAccess()
-    {
-        return $this->access;
-    }
-
-    public function setCreated($created)
-    {
-        $this->created = $created;
-    }
-
-    public function getCreated()
-    {
-        return $this->created;
-    }
-
-    public function setData($data)
-    {
-        $this->data = $data;
-    }
-
-    public function getData()
-    {
-        return $this->data;
-    }
-
-    public function setInit($init)
-    {
-        $this->init = $init;
-    }
-
-    public function getInit()
-    {
-        return $this->init;
-    }
-
-    public function setLanguage($language)
-    {
-        $this->language = $language;
-    }
-
-    public function getLanguage()
-    {
-        return $this->language;
-    }
-
-    public function setLogin($login)
-    {
-        $this->login = $login;
-    }
-
-    public function getLogin()
-    {
-        return $this->login;
-    }
-
-    public function setMail($mail)
-    {
-        $this->mail = $mail;
-    }
-
-    public function getMail()
-    {
-        return $this->mail;
-    }
-
-    public function setName($name)
-    {
-        $this->name = $name;
-    }
-
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    public function setPass($pass)
-    {
-        $this->pass = $pass;
-    }
-
-    public function getPass()
-    {
+    final public function getPassword(): string {
         return $this->pass;
     }
 
-    public function setPicture($picture)
-    {
-        $this->picture = $picture;
+    /**
+     * Covert this Doctrine-Entity object to a Global-User-StdClass object
+     *
+     * @return stdClass
+     */
+    final public function toDrupalUser(): stdClass {
+        $this->buildRoles();
+
+        $user = (object)(array)$this;
+        unset($user->_roles, $user->symfonyRoles, $user->isRolesRebuilt);
+
+        return $user;
     }
 
-    public function getPicture()
-    {
-        return $this->picture;
+    private function buildRoles(): void {
+        if (!$this->isRolesRebuilt) {
+            // build drupal Roles
+            $drupalRoles  = [];
+            $symfonyRoles = ['ROLE_ALLOWED_TO_SWITCH'];
+
+            foreach ($this->_roles as $role) {
+                // build Drupal Roles
+                $drupalRoles[$role->getRid()] = $role->getName();
+
+                // build Symfony Roles
+                $symfonyRoles[] = 'ROLE_DRUPAL_' . strtoupper(str_replace(' ', '_', $role->getName()));
+            }
+
+            $this->roles          = $drupalRoles;
+            $this->symfonyRoles   = $symfonyRoles;
+            $this->isRolesRebuilt = true;
+        }
     }
 
-    public function setSignature($signature)
-    {
-        $this->signature = $signature;
+    final public function getSalt(): ?string {
+        return null;
     }
 
-    public function getSignature()
-    {
-        return $this->signature;
+    final public function getUsername(): string {
+        return $this->name;
     }
 
-    public function setSignatureFormat($signatureFormat)
-    {
-        $this->signatureFormat = $signatureFormat;
-    }
-
-    public function getSignatureFormat()
-    {
-        return $this->signatureFormat;
-    }
-
-    public function setStatus($status)
-    {
-        $this->status = $status;
-    }
-
-    public function getStatus()
-    {
-        return $this->status;
-    }
-
-    public function setTheme($theme)
-    {
-        $this->theme = $theme;
-    }
-
-    public function getTheme()
-    {
-        return $this->theme;
-    }
-
-    public function setTimezone($timezone)
-    {
-        $this->timezone = $timezone;
-    }
-
-    public function getTimezone()
-    {
-        return $this->timezone;
-    }
-
-    public function setUid($uid)
-    {
-        $this->uid = $uid;
-    }
-
-    public function getUid()
-    {
-        return $this->uid;
+    final public function eraseCredentials(): void {
+        // TODO: Implement eraseCredentials() method.
     }
 
     /**
@@ -215,12 +225,11 @@ abstract class DrupalUser extends \stdClass
      * @link http://php.net/manual/en/serializable.serialize.php
      * @return string the string representation of the object or &null;
      */
-    public function serialize()
-    {
-        $values = array();
+    final public function serialize() {
+        $values = [];
 
-        foreach ($this as $name => $value) {
-            $values[$name] = $value;
+        foreach (['uid', 'name', 'pass', 'symfonyRoles'] as $name) {
+            $values[$name] = $this->$name;
         }
 
         return serialize($values);
@@ -230,13 +239,14 @@ abstract class DrupalUser extends \stdClass
      * (PHP 5 &gt;= 5.1.0)<br/>
      * Constructs the object
      * @link http://php.net/manual/en/serializable.unserialize.php
+     *
      * @param string $serialized <p>
-     * The string representation of the object.
-     * </p>
+     *                           The string representation of the object.
+     *                           </p>
+     *
      * @return mixed the original value unserialized.
      */
-    public function unserialize($serialized)
-    {
+    public function unserialize($serialized) {
         $values = unserialize($serialized);
 
         foreach ($values as $name => $value) {
@@ -244,5 +254,15 @@ abstract class DrupalUser extends \stdClass
         }
 
         return $values;
+    }
+
+    public function getData() {
+        return $this->data;
+    }
+
+    public function setData($data): self {
+        $this->data = $data;
+
+        return $this;
     }
 }

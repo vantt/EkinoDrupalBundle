@@ -132,7 +132,7 @@ class LoggerWatchdog implements LoggerInterface
     public function log($level, $message, array $context = array())
     {
         if (function_exists('watchdog')) {
-            watchdog('Symfony2', $message, $context, $level);
+            watchdog('Symfony4', $message, $context, $level);
         }
     }
 }

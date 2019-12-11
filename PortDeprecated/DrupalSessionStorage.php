@@ -77,7 +77,10 @@ class DrupalSessionStorage implements SessionStorageInterface
      */
     public function start()
     {
-        if ($this->started && !$this->closed) {
+
+        dump("Drupal Session start.");
+
+        if ($this->started) {
             return true;
         }
 
@@ -130,8 +133,6 @@ class DrupalSessionStorage implements SessionStorageInterface
      */
     public function getName()
     {
-        $this->start();
-
         return session_name();
     }
 
@@ -195,7 +196,10 @@ class DrupalSessionStorage implements SessionStorageInterface
             throw new \InvalidArgumentException(sprintf('The SessionBagInterface %s is not registered.', $name));
         }
 
-        $this->start();
+        if (!$this->started) {
+            $this->start();
+        }
+
 
         return $this->bags[$name];
     }
