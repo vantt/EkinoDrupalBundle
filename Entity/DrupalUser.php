@@ -134,7 +134,7 @@ class DrupalUser implements UserInterface, \Serializable {
     public $data = [];
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\DrupalRole", fetch="EAGER")
+     * @ORM\ManyToMany(targetEntity="Ekino\Bundle\DrupalBundle\Entity\DrupalRole", fetch="EAGER")
      * @ORM\JoinTable(
      *     name="users_roles",
      *     joinColumns={

@@ -66,9 +66,6 @@ class DrupalRender {
         $this->strategy  = $strategy;
         $this->session   = $session;
         $this->stackUser = $stackUser;
-
-        global $mylogger;
-        $this->logger = $mylogger;
     }
 
     public function render(Request $request, bool $justLogin=false): ?Response {
@@ -97,7 +94,6 @@ class DrupalRender {
             $response = $this->drupal->getResponse();
 
             if ($this->isRedirect()) {
-                $this->logger->info('my redirect', ['redirect' => $this->getRedirect()]);
                 return new RedirectResponse($this->getRedirect(), 302, $response->headers->all());
             }
 
