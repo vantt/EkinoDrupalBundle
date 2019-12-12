@@ -1,0 +1,150 @@
+Index: code/html/includes/common.inc
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- code/html/includes/common.inc	(revision 33155808e7388c5009af34c6faf5184ec5615c06)
++++ code/html/includes/common.inc	(date 1576063698164)
+@@ -679,6 +679,7 @@
+  * @see url()
+  */
+ function drupal_goto($path = '', array $options = array(), $http_response_code = 302) {
++
+   // A destination in $_GET always overrides the function arguments.
+   // We do not allow absolute URLs to be passed via $_GET, as this can be an attack vector.
+   if (isset($_GET['destination']) && !url_is_external($_GET['destination'])) {
+@@ -823,7 +824,7 @@
+     'data' => NULL,
+     'max_redirects' => 3,
+     'timeout' => 30.0,
+-    'context' => NULL,
++    'context' => stream_context_create(array('ssl' => ['verify_peer' => FALSE, 'verify_peer_name' => FALSE])), // vantt anphabe
+   );
+ 
+   // Merge the default headers.
+@@ -2802,7 +2803,10 @@
+     }
+     drupal_session_commit();
+   }
+-  exit;
++  // anphabe/vantt disable for Symfony.
++  // if we exit here, symfony could not capture and handle the response
++  // please use $form['redirect'] if you want to redirect from a Form
++  //exit;
+ }
+ 
+ /**
+@@ -8496,5 +8500,15 @@
+     drupal_alter('filetransfer_info', $info);
+     uasort($info, 'drupal_sort_weight');
+   }
++
+   return $info;
+ }
++
++/**
++ * anphabe/vantt disable all Drupal Session settings, Symfony will handle this
++ * do vantt che ra de tam thoi tuong thich voi co che commit cua Drupal.
++ * //that ra symfony se lo het
++ */
++function drupal_session_commit(){};
++function drupal_save_session(){};
++function drupal_session_regenerate(){};
+\ No newline at end of file
+Index: code/html/sites/default/settings.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- code/html/sites/default/settings.php	(revision 596381052bade7d6c71778fe54777620190a05ed)
++++ code/html/sites/default/settings.php	(date 1576052213000)
+@@ -1,6 +1,6 @@
+ <?php
+ if (!defined('ANPHABE_KERNEL')) {
+-    require DRUPAL_ROOT . '/vendor/autoload.php';
++    require DRUPAL_ROOT . '/../vendor/autoload.php';
+ }
+ 
+ $container                     = AnphabeContainer();
+@@ -277,7 +277,7 @@
+   'charset'   => 'utf8mb4',
+   'collation' => 'utf8mb4_general_ci',
+ ];
+-#$conf['drupal_all_databases_are_utf8mb4'] = true;
++
+ $conf['drupal_all_databases_are_utf8mb4'] = true;
+ 
+ 
+@@ -352,8 +352,8 @@
+  * PHP's garbage collection for clearing sessions, ensure that garbage
+  * collection occurs by using the most common settings.
+  */
+-ini_set('session.gc_probability', 1);
+-ini_set('session.gc_divisor', 100);
++//ini_set('session.gc_probability', 1);
++//ini_set('session.gc_divisor', 100);
+ 
+ /**
+  * Set session lifetime (in seconds), i.e. the time from the user's last visit
+@@ -361,14 +361,14 @@
+  * a session is deleted, authenticated users are logged out, and the contents
+  * of the user's $_SESSION variable is discarded.
+  */
+-ini_set('session.gc_maxlifetime', 200000);
++//ini_set('session.gc_maxlifetime', 200000);
+ 
+ /**
+  * Set session cookie lifetime (in seconds), i.e. the time from the session is
+  * created to the cookie expires, i.e. when the browser is expected to discard
+  * the cookie. The value 0 means "until the browser is closed".
+  */
+-ini_set('session.cookie_lifetime', 0);
++//ini_set('session.cookie_lifetime', 0);
+ 
+ /**
+  * If you encounter a situation where users post a large amount of text, and
+@@ -376,7 +376,7 @@
+  * output filter may not have sufficient memory to process it.  If you
+  * experience this issue, you may wish to uncomment the following two lines
+  * and increase the limits of these variables.  For more information, see
+- * http://php.net/manual/pcre.configuration.php.
++ * http://php.net/manual/en/pcre.configuration.php.
+  */
+ # ini_set('pcre.backtrack_limit', 200000);
+ # ini_set('pcre.recursion_limit', 200000);
+Index: code/html/index.php
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- code/html/index.php	(revision 596381052bade7d6c71778fe54777620190a05ed)
++++ code/html/index.php	(date 1576054901430)
+@@ -13,16 +13,17 @@
+ /**
+  * Root directory of Drupal installation.
+  */
+-define('DRUPAL_ROOT', getcwd());
++
++$loader = require __DIR__. '/../vendor/autoload.php';
+ 
+-$loader = require DRUPAL_ROOT . '/../vendor/autoload.php';
++global $container;
+ 
+-setup_symfony();
++$container = setup_symfony();
+ 
+-require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
++use Symfony\Component\HttpFoundation\Request;
+ 
+-drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+-/*$queue = \DrupalQueue::get('update_progress_survey');
+-$queue->createItem('5da95dfd15bbe');
+-$queue->createItem('5da95dfd15bbe');/**/
+-menu_execute_active_handler();
+\ No newline at end of file
++$request = Request::createFromGlobals();
++
++$response = $kernel->handle($request);
++$response->send();
++$kernel->terminate($request, $response);
+\ No newline at end of file

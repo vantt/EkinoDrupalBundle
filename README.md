@@ -1,18 +1,36 @@
-Bridge Bricks by 20steps inc. Symfony 3 to Drupal 7.x
+Bridge Bricks by 20steps inc. Symfony 4 to Drupal 7.x
 =====================================================
 
-The bundle deeply integrates Bricks by 20steps including Symfony 3 with Drupal7 and vice versa. This is done without
-altering Drupal's core.
-
-When this bundle is activated, the Symfony 3 console will have the Drupal 7.x libraries autoloaded. So, it makes possible
-the use of Drupal libraries from your Symfony 3 command.
+The bundle deeply integrates Bricks by 20steps including Symfony 4 with Drupal7 and vice versa. 
+This is done with small modification to Drupal core.
 
 Install
 -------
+- Require this bundle.
+- Enable bundle.
+- Copy ToSymfony.patch to project root folder and apply it
+- Copy files Resources/ekino_drupal.yaml to config folder.
+- Merge settings in Resources/security.yaml into the config/security.yaml
+- Copy settings in Resources/ekino_drupal_routes.yaml into the end of config/routes.yaml
+- Run MySQL Table Creation for sessions and rememberMe token.
+- Tweak config/security.yaml for firewall control.
 
-### Download the Bricks by 20steps Drupal 7 edition
+CREATE TABLE `sessions_sym` (
+    `sess_id` VARCHAR(128) NOT NULL PRIMARY KEY,
+    `sess_data` BLOB NOT NULL,
+    `sess_time` INTEGER UNSIGNED NOT NULL,
+    `sess_lifetime` INTEGER UNSIGNED NOT NULL
+) COLLATE utf8mb4_bin, ENGINE = InnoDB;
 
-### Configuration
+CREATE TABLE `rememberme_token` (
+    `series`   char(88)     UNIQUE PRIMARY KEY NOT NULL,
+    `value`    char(88)     NOT NULL,
+    `lastUsed` datetime     NOT NULL,
+    `class`    varchar(100) NOT NULL,
+    `username` varchar(200) NOT NULL
+);
+
+### Below is original Configuration from Ekino 
 
 Adapt the  ``etc/config/cms.yml`` file to your needs:
 
