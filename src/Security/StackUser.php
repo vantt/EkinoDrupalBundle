@@ -60,7 +60,7 @@ class StackUser {
         return $user;
     }
 
-    private function createAnonymousUser(): stdClass {
+    public function createAnonymousUser(): stdClass {
         $user           = new stdClass();
         $user->uid      = 0;
         $user->roles    = [];

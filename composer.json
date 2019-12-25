@@ -23,6 +23,9 @@
         "psr/log": "^1.1"
     },
     "autoload": {
-        "psr-4": { "Ekino\\Bundle\\DrupalBundle\\": "" }
+        "psr-4": {
+            "Ekino\\Bundle\\DrupalBundle\\": "src/",
+            "Ekino\\Bundle\\DrupalBundle\\Tests\\": "test/"
+        }
     }    
 }
