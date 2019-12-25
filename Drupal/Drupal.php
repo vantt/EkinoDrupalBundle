@@ -87,7 +87,15 @@ class Drupal implements DrupalInterface {
 
     protected $injection;
 
+    /**
+     * @var string
+     */
     protected $redirect = '';
+
+    /**
+     * @var int
+     */
+    private $statusCode = 200;
 
     /**
      * Constructor
@@ -538,14 +546,15 @@ class Drupal implements DrupalInterface {
      * @return array
      */
     protected function cleanHeaders() {
-        $headers = [];
+        $header_list = [];
         foreach (headers_list() as $header) {
             list($name, $value) = explode(':', $header, 2);
-            $headers[$name] = trim($value);
+            $header_list[] = ['name' => $name, 'value' => trim($value)];
 
             header_remove($name);
         }
-        return $headers;
+
+        return $header_list;
     }
 
     /**
@@ -574,19 +583,26 @@ class Drupal implements DrupalInterface {
         return $this->redirect;
     }
 
-    private function correctHeaders() {
-        $headers = $this->cleanHeaders();
+    final public function getStatusCode(): int {
+        return $this->statusCode;
+    }
 
-        foreach ($headers as $name => $value) {
+    private function correctHeaders(): void {
+        $headers          = $this->cleanHeaders();
+        $this->statusCode = (int)http_response_code();
+
+        foreach ($headers as $header) {
+            $name  = $header['name'];
+            $value = $header['value'];
+
             if ('Set-Cookie' === $name) {
                 $this->response->headers->setCookie(Cookie::fromString($value));
             }
+            elseif ('Location' === $name) {
+                $this->redirect = $value;
+            }
             else {
                 $this->response->headers->set($name, $value);
-            }
-
-            if ('Location' === $name) {
-                $this->redirect = $value;
             }
         }
     }

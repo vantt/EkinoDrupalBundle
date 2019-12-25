@@ -94,7 +94,7 @@ class DrupalRender {
             $response = $this->drupal->getResponse();
 
             if ($this->isRedirect()) {
-                return new RedirectResponse($this->getRedirect(), 302, $response->headers->all());
+                return new RedirectResponse($this->getRedirect(), $this->drupal->getStatusCode(), $response->headers->all());
             }
 
             return $response;

@@ -62,6 +62,10 @@ interface DrupalInterface
 
     public function isRedirect() : bool ;
 
+    public function getRedirect(): string;
+
+    public function getStatusCode(): int;
+    
     /**
      * @return boolean
      *
