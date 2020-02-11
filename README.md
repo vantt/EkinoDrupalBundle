@@ -1,5 +1,11 @@
 Bridge Bricks by 20steps inc. Symfony 4 to Drupal 7.x
 =====================================================
+- EkinoDrupalBundle was initially developed not for Symfony 4.
+- This customized version is fixed for Symfony 4.4 and Symfony will handle Drupal session.
+- The original version will let Drupal bootstrap first and then symfony. This version make Symfony first.
+- Symfony will handle Drupal authentication
+
+------------------------------
 
 The bundle deeply integrates Bricks by 20steps including Symfony 4 with Drupal7 and vice versa. 
 This is done with small modification to Drupal core.
