@@ -4,7 +4,7 @@ Bridge Bricks by 20steps inc. Symfony 4 to Drupal 7.x
 - This customized version is fixed for Symfony 4.4 and Symfony will handle Drupal session.
 - The original version will let Drupal bootstrap first and then symfony. This version make Symfony first.
 - Symfony will handle Drupal authentication
-
+- We can use both Symfony Routing or Drupal menu for page handling.
 ------------------------------
 
 The bundle deeply integrates Bricks by 20steps including Symfony 4 with Drupal7 and vice versa. 
