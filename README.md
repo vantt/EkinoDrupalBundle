@@ -32,7 +32,7 @@ CREATE TABLE `rememberme_token` (
 
 ### Below is original Configuration from Ekino 
 
-Adapt the  ``etc/config/cms.yml`` file to your needs:
+Adapt the  ``etc/config/ekino_drupal.yaml`` file to your needs:
 
     parameters:
         session.flashbag.class:       Ekino\Bundle\DrupalBundle\Port\DrupalFlashBag

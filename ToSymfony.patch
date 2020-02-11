@@ -1,28 +1,47 @@
+Index: code/html/includes/form.inc
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- code/html/includes/form.inc	(revision 33155808e7388c5009af34c6faf5184ec5615c06)
++++ code/html/includes/form.inc	(date 1576834303063)
+@@ -1312,6 +1312,9 @@
+     if (isset($form_state['redirect'])) {
+       if (is_array($form_state['redirect'])) {
+         call_user_func_array('drupal_goto', $form_state['redirect']);
++
++        // anphabe/vantt return here so Symfony can capture the redirect
++        return;
+       }
+       else {
+         // This function can be called from the installer, which guarantees
+@@ -1319,6 +1322,9 @@
+         // and use the appropriate redirect function.
+         $function = drupal_installation_attempted() ? 'install_goto' : 'drupal_goto';
+         $function($form_state['redirect']);
++
++		// anphabe/vantt return here so Symfony can capture the redirect
++        return;
+       }
+     }
+     drupal_goto(current_path(), array('query' => drupal_get_query_parameters()));
 Index: code/html/includes/common.inc
 IDEA additional info:
 Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 <+>UTF-8
 ===================================================================
 --- code/html/includes/common.inc	(revision 33155808e7388c5009af34c6faf5184ec5615c06)
-+++ code/html/includes/common.inc	(date 1576063698164)
-@@ -679,6 +679,7 @@
-  * @see url()
-  */
- function drupal_goto($path = '', array $options = array(), $http_response_code = 302) {
-+
-   // A destination in $_GET always overrides the function arguments.
-   // We do not allow absolute URLs to be passed via $_GET, as this can be an attack vector.
-   if (isset($_GET['destination']) && !url_is_external($_GET['destination'])) {
-@@ -823,7 +824,7 @@
++++ code/html/includes/common.inc	(date 1577254179982)
+@@ -823,7 +823,7 @@
      'data' => NULL,
      'max_redirects' => 3,
      'timeout' => 30.0,
 -    'context' => NULL,
-+    'context' => stream_context_create(array('ssl' => ['verify_peer' => FALSE, 'verify_peer_name' => FALSE])), // vantt anphabe
++    'context' => stream_context_create(array('ssl' => ['verify_peer' => FALSE, 'verify_peer_name' => FALSE])),
    );
  
    // Merge the default headers.
-@@ -2802,7 +2803,10 @@
+@@ -2802,7 +2802,10 @@
      }
      drupal_session_commit();
    }
@@ -34,7 +53,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
  }
  
  /**
-@@ -8496,5 +8500,15 @@
+@@ -8496,5 +8499,15 @@
      drupal_alter('filetransfer_info', $info);
      uasort($info, 'drupal_sort_weight');
    }
@@ -43,7 +62,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
  }
 +
 +/**
-+ * anphabe/vantt disable all Drupal Session settings, Symfony will handle this
++ * adsf asdf asdfasdf asdfanphabe/vantt disable all Drupal Session settings, Symfony will handle this
 + * do vantt che ra de tam thoi tuong thich voi co che commit cua Drupal.
 + * //that ra symfony se lo het
 + */
@@ -51,13 +70,148 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 +function drupal_save_session(){};
 +function drupal_session_regenerate(){};
 \ No newline at end of file
+Index: code/html/includes/bootstrap.inc
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- code/html/includes/bootstrap.inc	(revision 33155808e7388c5009af34c6faf5184ec5615c06)
++++ code/html/includes/bootstrap.inc	(date 1576050147821)
+@@ -688,22 +688,23 @@
+   // Enforce E_ALL, but allow users to set levels not part of E_ALL.
+   error_reporting(E_ALL | error_reporting());
+ 
+-  // Override PHP settings required for Drupal to work properly.
+-  // sites/default/default.settings.php contains more runtime settings.
+-  // The .htaccess file contains settings that cannot be changed at runtime.
+-
+-  // Don't escape quotes when reading files from the database, disk, etc.
+-  ini_set('magic_quotes_runtime', '0');
+-  // Use session cookies, not transparent sessions that puts the session id in
+-  // the query string.
+-  ini_set('session.use_cookies', '1');
+-  ini_set('session.use_only_cookies', '1');
+-  ini_set('session.use_trans_sid', '0');
+-  // Don't send HTTP headers using PHP's session handler.
+-  // An empty string is used here to disable the cache limiter.
+-  ini_set('session.cache_limiter', '');
+-  // Use httponly session cookies.
+-  ini_set('session.cookie_httponly', '1');
++// anphabe/vantt disable all Drupal Session settings, Symfony will handle this 
++//  // Override PHP settings required for Drupal to work properly.
++//  // sites/default/default.settings.php contains more runtime settings.
++//  // The .htaccess file contains settings that cannot be changed at runtime.
++//
++//  // Don't escape quotes when reading files from the database, disk, etc.
++//  ini_set('magic_quotes_runtime', '0');
++//  // Use session cookies, not transparent sessions that puts the session id in
++//  // the query string.
++//  ini_set('session.use_cookies', '1');
++//  ini_set('session.use_only_cookies', '1');
++//  ini_set('session.use_trans_sid', '0');
++//  // Don't send HTTP headers using PHP's session handler.
++//  // An empty string is used here to disable the cache limiter.
++//  ini_set('session.cache_limiter', '');
++//  // Use httponly session cookies.
++//  ini_set('session.cookie_httponly', '1');
+ 
+   // Set sane locale settings, to ensure consistent string, dates, times and
+   // numbers handling.
+@@ -807,7 +808,8 @@
+   // Per RFC 2109, cookie domains must contain at least one dot other than the
+   // first. For hosts such as 'localhost' or IP Addresses we don't set a cookie domain.
+   if (count(explode('.', $cookie_domain)) > 2 && !is_numeric(str_replace('.', '', $cookie_domain))) {
+-    ini_set('session.cookie_domain', $cookie_domain);
++// anphabe/vantt disable all Drupal Session settings, Symfony will handle this  
++//    ini_set('session.cookie_domain', $cookie_domain);
+   }
+   // To prevent session cookies from being hijacked, a user can configure the
+   // SSL version of their website to only transfer session cookies via SSL by
+@@ -816,10 +818,12 @@
+   // must use different session identifiers for HTTPS and HTTP to prevent a
+   // cookie collision.
+   if ($is_https) {
+-    ini_set('session.cookie_secure', TRUE);
++    // anphabe/vantt disable all Drupal Session settings, Symfony will handle this
++    //ini_set('session.cookie_secure', TRUE);
+   }
+-  $prefix = ini_get('session.cookie_secure') ? 'SSESS' : 'SESS';
+-  session_name($prefix . substr(hash('sha256', $session_name), 0, 32));
++  //$prefix = ini_get('session.cookie_secure') ? 'SSESS' : 'SESS';
++  // anphabe/vantt disable all Drupal Session settings, Symfony will handle this
++//  /session_name($prefix . substr(hash('sha256', $session_name), 0, 32));
+ }
+ 
+ /**
+@@ -1932,7 +1936,7 @@
+  * @see watchdog()
+  * @see _drupal_decode_exception()
+  */
+-function watchdog_exception($type, Exception $exception, $message = NULL, $variables = array(), $severity = WATCHDOG_ERROR, $link = NULL) {
++function watchdog_exception($type, Throwable $exception, $message = NULL, $variables = array(), $severity = WATCHDOG_ERROR, $link = NULL) {
+ 
+    // Use a default value if $message is not set.
+    if (empty($message)) {
+@@ -2545,7 +2549,8 @@
+     DRUPAL_BOOTSTRAP_PAGE_CACHE,
+     DRUPAL_BOOTSTRAP_DATABASE,
+     DRUPAL_BOOTSTRAP_VARIABLES,
+-    DRUPAL_BOOTSTRAP_SESSION,
++	// anphabe/vantt disable all Drupal Session settings, Symfony will handle this
++    //DRUPAL_BOOTSTRAP_SESSION,
+     DRUPAL_BOOTSTRAP_PAGE_HEADER,
+     DRUPAL_BOOTSTRAP_LANGUAGE,
+     DRUPAL_BOOTSTRAP_FULL,
+@@ -2593,8 +2598,9 @@
+           break;
+ 
+         case DRUPAL_BOOTSTRAP_SESSION:
+-          require_once DRUPAL_ROOT . '/' . variable_get('session_inc', 'includes/session.inc');
+-          drupal_session_initialize();
++// anphabe/vantt disable all Drupal Session settings, Symfony will handle this		
++//          require_once DRUPAL_ROOT . '/' . variable_get('session_inc', 'includes/session.inc');
++//          drupal_session_initialize();
+           break;
+ 
+         case DRUPAL_BOOTSTRAP_PAGE_HEADER:
+Index: code/html/includes/module.inc
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- code/html/includes/module.inc	(revision 33155808e7388c5009af34c6faf5184ec5615c06)
++++ code/html/includes/module.inc	(date 1576050147917)
+@@ -934,7 +934,10 @@
+ 
+         // vantt add drupal injection callback
+         if ($callback = $GLOBALS['injection_callback']) {
+-            return $callback->execute($module . '_' . $hook, $args);
++            $result = $callback->execute($module . '_' . $hook, $args);
++     	    // vantt add drupal injection callback for eventDispatching to Symfony
++            $callback->dispatchEvent($hook, $args);
++            return $result;
+         }
+         else
+             return call_user_func_array($module . '_' . $hook, $args);
+@@ -985,6 +988,11 @@
+         }
+     }
+ 
++    // vantt add drupal injection callback for eventDispatching to Symfony
++    if ($callback = $GLOBALS['injection_callback']) {
++        $callback->dispatchEvent($hook, $args);
++    }
++
+   return $return;
+ }
+ 
 Index: code/html/sites/default/settings.php
 IDEA additional info:
 Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 <+>UTF-8
 ===================================================================
 --- code/html/sites/default/settings.php	(revision 596381052bade7d6c71778fe54777620190a05ed)
-+++ code/html/sites/default/settings.php	(date 1576052213000)
++++ code/html/sites/default/settings.php	(date 1576551716540)
 @@ -1,6 +1,6 @@
  <?php
  if (!defined('ANPHABE_KERNEL')) {
@@ -118,23 +272,24 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 <+>UTF-8
 ===================================================================
 --- code/html/index.php	(revision 596381052bade7d6c71778fe54777620190a05ed)
-+++ code/html/index.php	(date 1576054901430)
-@@ -13,16 +13,17 @@
++++ code/html/index.php	(date 1576558266045)
+@@ -13,16 +13,20 @@
  /**
   * Root directory of Drupal installation.
   */
 -define('DRUPAL_ROOT', getcwd());
-+
 +$loader = require __DIR__. '/../vendor/autoload.php';
- 
--$loader = require DRUPAL_ROOT . '/../vendor/autoload.php';
++
 +global $container;
  
--setup_symfony();
+-$loader = require DRUPAL_ROOT . '/../vendor/autoload.php';
 +$container = setup_symfony();
  
+-setup_symfony();
++global $mylogger;
++$mylogger = $container->get('logger');
+ 
 -require_once DRUPAL_ROOT . '/includes/bootstrap.inc';
-+use Symfony\Component\HttpFoundation\Request;
  
 -drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 -/*$queue = \DrupalQueue::get('update_progress_survey');
@@ -142,6 +297,8 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 -$queue->createItem('5da95dfd15bbe');/**/
 -menu_execute_active_handler();
 \ No newline at end of file
++use Symfony\Component\HttpFoundation\Request;
++
 +$request = Request::createFromGlobals();
 +
 +$response = $kernel->handle($request);
