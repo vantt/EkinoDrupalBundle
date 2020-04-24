@@ -1,5 +1,5 @@
 {
-    "name": "anphabe/drupal-bundle",
+    "name": "vantt/drupal-bundle",
     "type": "symfony-bundle",
     "description": "Integrate Symfony4 with Drupal ",
     "keywords": ["components", "drupal"],
